@@ -1,0 +1,53 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { db } from "../../lib/db";
+
+const snippets = db
+  .prepare("SELECT * FROM snippets ORDER BY created_at DESC")
+  .all();
+---
+
+<Layout title="Snippets">
+  <main class="min-h-screen bg-gray-950 text-white p-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-purple-400">Mis snippets</h1>
+        <a
+          href="/snippets/nuevo"
+          class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          + Nuevo snippet
+        </a>
+      </div>
+
+      {
+        snippets.length === 0 ? (
+          <p class="text-gray-500 text-center mt-20">
+            No tenés snippets todavía. ¡Creá el primero!
+          </p>
+        ) : (
+          <ul class="grid gap-4">
+            {(snippets as any[]).map((snippet) => (
+              <li>
+                <a
+                  href={`/snippets/${snippet.id}`}
+                  class="block border border-gray-800 hover:border-purple-600 rounded-lg p-4 transition-colors"
+                >
+                  <div class="flex justify-between items-start">
+                    <h2 class="font-medium text-white">{snippet.titulo}</h2>
+                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">
+                      {snippet.lenguaje}
+                    </span>
+                  </div>
+                  <p class="text-gray-500 text-sm mt-1">
+                    {snippet.descripcion}
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </main>
+</Layout>
