@@ -6,6 +6,7 @@
       "name": "codeshelf",
       "dependencies": {
         "@astrojs/node": "^10.0.3",
+        "@lucide/astro": "^1.0.1",
         "@tailwindcss/vite": "^4.2.2",
         "astro": "^6.0.8",
         "better-sqlite3": "^12.8.0",
@@ -158,6 +159,8 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@lucide/astro": ["@lucide/astro@1.0.1", "", { "peerDependencies": { "astro": "^4 || ^5" } }, "sha512-pvsCSu/sSgoU+mpoPTHVxrK7iFeZ2j1aY0jJt0CO/Hugjk6yCrvUCeXYFzMbsS75oD8/+QuhaC5BZDQzKzj0mg=="],
 
     "@oslojs/encoding": ["@oslojs/encoding@1.1.0", "", {}, "sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ=="],
 
