@@ -1,0 +1,65 @@
+---
+import { FileBraces } from "@lucide/astro";
+
+interface Props {
+  id: number;
+  titulo: string;
+  lenguaje: string;
+  codigo: string;
+  tags: string;
+}
+
+const { id, titulo, lenguaje, codigo, tags } = Astro.props;
+const tagsArray: string[] = JSON.parse(tags || "[]");
+const tagsSearch = JSON.parse(tags).join(" ");
+
+const languageColors: Record<string, string> = {
+  python: "#3776AB",
+  javascript: "#F7DF1E",
+  typescript: "#3178C6",
+  html: "#E34F26",
+  css: "#1572B6",
+  rust: "#CE422B",
+  go: "#00ADD8",
+  java: "#ED8B00",
+  php: "#777BB4",
+  ruby: "#CC342D",
+  swift: "#FA7343",
+  kotlin: "#7F52FF",
+  csharp: "#239120",
+  cpp: "#00599C",
+  shell: "#89E051",
+};
+
+const color = languageColors[lenguaje.toLowerCase()] ?? "#6B7280";
+---
+
+<a
+  href={`/snippets/${id}`}
+  class="block w-86 bg-codeshelf-panel rounded-xl p-5 hover:ring-1 hover:ring-codeshelf-cyan hover:scale-102 hover:shadow-codeshelf-cyan hover:shadow-[0_0_12px_rgba(0,240,255,0.8)] transition-all duration-500 snippet-card"
+  data-titulo={titulo.toLowerCase()}
+  data-lenguaje={lenguaje.toLowerCase()}
+  data-tags={tagsSearch.toLowerCase()}
+>
+  <h2 class="text-white font-semibold text-lg mb-2">{titulo}</h2>
+
+  <div class="flex items-center gap-2 mb-3">
+    <FileBraces color={color} size={18} stroke-width={2} />
+    <span class="text-codeshelf-muted text-sm">{lenguaje}</span>
+  </div>
+
+  <pre
+    class="bg-background rounded-lg p-3.5 h-20 text-sm text-codeshelf-muted mb-2 overflow-hidden font-mono"><code>{codigo}</code></pre>
+
+  {
+    tagsArray.length > 0 && (
+      <div class="flex flex-wrap gap-2">
+        {tagsArray.map((tag) => (
+          <span class="bg-codeshelf-purple/10 text-codeshelf-purple text-xs px-2 py-1.5 rounded-sm font-bold">
+            {tag}
+          </span>
+        ))}
+      </div>
+    )
+  }
+</a>

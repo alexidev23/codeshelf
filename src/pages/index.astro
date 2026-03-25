@@ -1,29 +1,40 @@
 ---
+import CardSnippet from "../components/CardSnippet.astro";
+import { SNIPPETS_DATA } from "../data/snippets";
 import Layout from "../layouts/Layout.astro";
+import { Plus } from "@lucide/astro";
 ---
 
 <Layout title="Inicio">
-  <main
-    class="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4"
-  >
-    <div class="max-w-2xl text-center">
-      <h1 class="text-5xl font-bold mb-4 text-purple-400">CodeShelf</h1>
-      <p class="text-gray-400 text-lg mb-8">
-        Tu biblioteca personal de snippets y generador de README con IA
+  <main class="min-h-screen w-full">
+    <div class="py-16 place-items-center space-y-4">
+      <h1 class="text-codeshelf-text text-5xl">Your Code, Organized</h1>
+      <p class="text-lg text-codeshelf-muted">
+        Store, manage, and generate documentation foy your snippets
       </p>
-      <div class="flex gap-4 justify-center">
-        <a
-          href="/snippets"
-          class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-        >
-          Ver snippets
-        </a>
-        <a
-          href="/readme"
-          class="border border-purple-600 hover:bg-purple-600/10 text-purple-400 px-6 py-3 rounded-lg font-medium transition-colors"
-        >
-          Generar README
-        </a>
+
+      <a
+        href={"/snippets/nuevo"}
+        class="flex items-center gap-2.5 bg-codeshelf-cyan py-3.5 px-5 mt-6 rounded-md shadow-codeshelf-cyan shadow-[0_0_12px_rgba(0,240,255,0.8)] hover:scale-110 transition-all duration-300 cursor-pointer"
+      >
+        <Plus />
+        <span>New Snippet</span>
+      </a>
+    </div>
+    <div class="max-w-6xl pb-10 mx-auto">
+      <h3 class="text-codeshelf-text text-2xl">Recently Used</h3>
+      <div class="my-4 grid grid-cols-3 grid-rows-2 gap-4">
+        {
+          SNIPPETS_DATA.map((item) => (
+            <CardSnippet
+              id={item.id}
+              titulo={item.titulo}
+              lenguaje={item.lenguaje}
+              codigo={item.codigo}
+              tags={item.tags}
+            />
+          ))
+        }
       </div>
     </div>
   </main>
