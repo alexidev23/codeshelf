@@ -1,14 +1,143 @@
 ---
+import { Code } from "astro:components";
+import { SNIPPETS_DATA } from "../../data/snippets";
 import Layout from "../../layouts/Layout.astro";
+import { ArrowLeft, FileBraces, Trash, Copy } from "@lucide/astro";
+
+const { id } = Astro.params;
+
+const snippet = SNIPPETS_DATA.find((item) => item.id === Number(id));
+
+if (!snippet) {
+  return Astro.redirect("/404");
+}
+
+const languageColors: Record<string, string> = {
+  python: "#3776AB",
+  javascript: "#F7DF1E",
+  typescript: "#3178C6",
+  html: "#E34F26",
+  css: "#1572B6",
+  rust: "#CE422B",
+  go: "#00ADD8",
+  java: "#ED8B00",
+  php: "#777BB4",
+  ruby: "#CC342D",
+  swift: "#FA7343",
+  kotlin: "#7F52FF",
+  csharp: "#239120",
+  cpp: "#00599C",
+  shell: "#89E051",
+};
+
+const color = languageColors[snippet.lenguaje.toLowerCase()] ?? "#6B7280";
+
+const lineas = snippet.codigo.split("\n");
+
+const tagsArray: string[] = JSON.parse(snippet.tags || "[]");
 ---
 
 <Layout title="Snippet">
-  <main class="min-h-screen bg-gray-950 text-white p-8">
-    <div class="max-w-2xl mx-auto">
-      <h1 class="text-3xl font-bold text-purple-400 mb-8">
-        Detalle del snippet
-      </h1>
-      <p class="text-gray-500">Detalle próximamente...</p>
+  <main class="min-h-screen flex">
+    <div class="flex">
+      <div class="w-260">
+        <div class="border-b-2 border-codeshelf-border px-8 py-4">
+          <a
+            href="/snippets"
+            class="text-codeshelf-muted flex items-center gap-2"
+          >
+            <ArrowLeft size={15} />
+            <span>Back to snippets</span>
+          </a>
+
+          <div class="py-2.5 flex justify-between items-center">
+            <h2 class="text-codeshelf-text text-2xl">{snippet.titulo}</h2>
+
+            <button
+              class="text-destructive bg-destructive/15 flex items-center gap-2 py-2 px-4 rounded-md hover:ring-1 hover:ring-destructive transition-all duration-300"
+            >
+              <Trash size={20} />
+              <span>Delete</span>
+            </button>
+          </div>
+
+          <div class="text-codeshelf-muted flex items-center gap-2">
+            <FileBraces color={color} size={18} />
+            <span class="text-sm">{snippet.lenguaje}</span>
+          </div>
+        </div>
+
+        <div class="overflow-hidden max-w-5xl mx-auto pt-4 pb-10">
+          <div class="flex flex-col justify-end p-4 relative">
+            <button
+              id="copy-btn"
+              data-code={snippet.codigo}
+              class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-codeshelf-cyan text-codeshelf-cyan text-sm font-bold hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all active:scale-95 absolute w-50 top-8 right-8"
+            >
+              <Copy size={20} />
+              <span>Copy to Clipboard</span>
+            </button>
+
+            <div
+              class="border border-codeshelf-border rounded-2xl overflow-hidden"
+            >
+              <div class="flex p-6 font-mono text-sm">
+                <div class="pr-4 text-white/20 text-right select-none min-w-10">
+                  {lineas.map((_, i) => <span class="block">{i + 1}</span>)}
+                </div>
+
+                <div class="overflow-x-auto w-full">
+                  <Code
+                    code={snippet.codigo}
+                    lang={snippet.lenguaje as any}
+                    theme="one-dark-pro"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="border-l-2 border-codeshelf-border p-6">
+        <h4 class="text-codeshelf-text text-2xl">Details</h4>
+
+        <div class="py-4">
+          <p class="text-sm text-codeshelf-muted">Created</p>
+          <p class="text-codeshelf-text">March 20, 2026</p>
+        </div>
+
+        <div class="pb-4">
+          <p class="text-sm text-codeshelf-muted">Last update</p>
+          <p class="text-codeshelf-text">March 20, 2026</p>
+        </div>
+
+        <div class="pb-4">
+          <p class="text-sm text-codeshelf-muted mb-3">Tags</p>
+          <div class="flex flex-wrap gap-2">
+            {
+              tagsArray.map((tag) => (
+                <span class="bg-codeshelf-purple/10 text-codeshelf-purple text-xs px-2 py-1.5 rounded-sm font-bold">
+                  {tag}
+                </span>
+              ))
+            }
+          </div>
+        </div>
+      </div>
     </div>
   </main>
+
+  <style is:global>
+    /* Forzamos a que el pre de Shiki no tenga fondo propio */
+    pre.astro-code {
+      background-color: transparent !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Aseguramos que el texto mantenga buen contraste */
+    pre.astro-code span {
+      font-family: inherit;
+    }
+  </style>
 </Layout>

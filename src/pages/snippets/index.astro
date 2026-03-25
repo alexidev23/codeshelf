@@ -1,53 +1,125 @@
 ---
+import CardSnippet from "../../components/CardSnippet.astro";
+import { LENGUAJES_FILTRO, SNIPPETS_DATA } from "../../data/snippets";
 import Layout from "../../layouts/Layout.astro";
+import { Plus, Search } from "@lucide/astro";
 import { db } from "../../lib/db";
 
-const snippets = db
-  .prepare("SELECT * FROM snippets ORDER BY created_at DESC")
-  .all();
+const snippets = "hola";
+
+// db
+//   .prepare("SELECT * FROM snippets ORDER BY created_at DESC")
+//   .all();
 ---
 
 <Layout title="Snippets">
-  <main class="min-h-screen bg-gray-950 text-white p-8">
-    <div class="max-w-4xl mx-auto">
-      <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-purple-400">Mis snippets</h1>
-        <a
-          href="/snippets/nuevo"
-          class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          + Nuevo snippet
-        </a>
-      </div>
-
-      {
-        snippets.length === 0 ? (
-          <p class="text-gray-500 text-center mt-20">
-            No tenés snippets todavía. ¡Creá el primero!
-          </p>
-        ) : (
-          <ul class="grid gap-4">
-            {(snippets as any[]).map((snippet) => (
-              <li>
-                <a
-                  href={`/snippets/${snippet.id}`}
-                  class="block border border-gray-800 hover:border-purple-600 rounded-lg p-4 transition-colors"
-                >
-                  <div class="flex justify-between items-start">
-                    <h2 class="font-medium text-white">{snippet.titulo}</h2>
-                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">
-                      {snippet.lenguaje}
-                    </span>
-                  </div>
-                  <p class="text-gray-500 text-sm mt-1">
-                    {snippet.descripcion}
-                  </p>
-                </a>
+  <main class="min-h-screen">
+    <div class="w-full mx-auto flex">
+      <div class="border-r-2 border-codeshelf-border w-75">
+        <h2 class="text-2xl text-codeshelf-text py-4 px-6">Lenguajes</h2>
+        <ul class="px-6 pb-5">
+          {
+            LENGUAJES_FILTRO.map((item) => (
+              <li class="px-2.5 py-1.5" data-lenguaje={item}>
+                <span class="text-codeshelf-muted font-bold">{item}</span>
               </li>
-            ))}
-          </ul>
-        )
-      }
+            ))
+          }
+        </ul>
+      </div>
+      <div class="w-full overflow-y-auto">
+        <div
+          class="flex justify-between items-center mb-8 border-b border-codeshelf-border py-3.5 px-5"
+        >
+          <div class="relative w-full max-w-4xl">
+            <div
+              class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-codeshelf-muted"
+            >
+              <Search class="text-codeshelf-muted" size={20} />
+            </div>
+            <input
+              type="text"
+              id="snippet-search"
+              placeholder="Search snippets..."
+              class="w-full bg-codeshelf-panel border border-codeshelf-border text-codeshelf-text text-sm rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-codeshelf-cyan/20 focus:border-codeshelf-cyan outline-none transition-all placeholder:text-codeshelf-muted placeholder:font-semibold"
+            />
+          </div>
+          <a
+            href="/snippets/nuevo"
+            class="bg-codeshelf-cyan text-black px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
+          >
+            <Plus size={20} />
+            <span>New Snippet</span>
+          </a>
+        </div>
+
+        {
+          snippets.length === 0 ? (
+            <p class="text-gray-500 text-center mt-20">
+              No tenés snippets todavía. ¡Creá el primero!
+            </p>
+          ) : (
+            <div class="w-full">
+              {/* Mensaje de "Sin resultados" (Oculto por defecto) */}
+              <div id="no-results-msg" class="hidden text-center mt-20">
+                <p class="text-codeshelf-muted text-lg">
+                  No se encontraron snippets que coincidan con tu búsqueda.
+                </p>
+                <span class="text-codeshelf-cyan text-sm">
+                  Probá con otros términos 🔍
+                </span>
+              </div>
+              <ul class="my-4 px-4 flex flex-wrap justify-center gap-4">
+                {SNIPPETS_DATA.map((item) => (
+                  <CardSnippet
+                    id={item.id}
+                    titulo={item.titulo}
+                    lenguaje={item.lenguaje}
+                    codigo={item.codigo}
+                    tags={item.tags}
+                  />
+                ))}
+              </ul>
+            </div>
+          )
+        }
+      </div>
     </div>
   </main>
 </Layout>
+
+<script>
+  const searchInput = document.querySelector("#snippet-search");
+  const cards = document.querySelectorAll(".snippet-card");
+  const noResultsMsg = document.querySelector("#no-results-msg");
+
+  searchInput?.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    let visibleCards = 0;
+
+    cards.forEach((card) => {
+      const titulo = card.getAttribute("data-titulo") || "";
+      const lenguaje = card.getAttribute("data-lenguaje") || "";
+      const tags = card.getAttribute("data-tags") || "";
+
+      const matches =
+        titulo.includes(term) || lenguaje.includes(term) || tags.includes(term);
+
+      if (matches) {
+        card.classList.remove("hidden");
+        card.classList.add("block");
+        visibleCards++; // Aumentamos el contador si hay coincidencia
+      } else {
+        card.classList.remove("block");
+        card.classList.add("hidden");
+      }
+    });
+
+    // Control del mensaje de "Sin resultados"
+    if (visibleCards === 0) {
+      noResultsMsg?.classList.remove("hidden");
+    } else {
+      noResultsMsg?.classList.add("hidden");
+    }
+  });
+</script>
