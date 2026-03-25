@@ -1,0 +1,41 @@
+---
+import { CodeXml, FileBraces, Library, Sparkles } from "@lucide/astro";
+import Nav from "./Nav.astro";
+
+const { pathname } = Astro.url;
+
+const NAVLNKS = [
+  { href: "/", icon: FileBraces, label: "Dashboard" }, // Nombres en minúscula para Lucide
+  { href: "/snippets", icon: Library, label: "Snippets" },
+  { href: "/readme", icon: Sparkles, label: "AI Readme" },
+];
+
+const checkActive = (path: string) => {
+  if (path === "/") return pathname === "/";
+  return pathname.startsWith(path);
+};
+---
+
+<header
+  class="bg-background flex items-center gap-14 border-b border-codeshelf-border py-3.5 px-6"
+>
+  <div class="flex items-center gap-3.5">
+    <CodeXml class="text-codeshelf-cyan" size={35} stroke-width={2} />
+    <h1 class="text-codeshelf-text text-3xl font-semibold tracking-tight">
+      CodeShelf
+    </h1>
+  </div>
+
+  <nav class="flex items-center gap-4">
+    {
+      NAVLNKS.map((link) => (
+        <Nav
+          href={link.href}
+          icon={link.icon}
+          label={link.label}
+          isActive={checkActive(link.href)}
+        />
+      ))
+    }
+  </nav>
+</header>
