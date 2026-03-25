@@ -1,0 +1,36 @@
+---
+// src/components/Nav.astro
+import { Icon } from "@lucide/astro";
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
+
+interface Props {
+  href: string;
+  icon: AstroComponentFactory;
+  label: string;
+  isActive: boolean;
+}
+
+const { href, icon: IconComponent, label, isActive } = Astro.props;
+---
+
+<a
+  href={href}
+  class:list={[
+    "flex items-center gap-2 py-1.5 px-3 rounded-md transition-all duration-200 group",
+    {
+      // Activo: Fondo cian con transparencia y borde sutil
+      "bg-codeshelf-cyan/10 text-codeshelf-cyan border border-codeshelf-cyan/20 shadow-[0_0_15px_rgba(0,240,255,0.05)]":
+        isActive,
+      // Inactivo: Gris suave que brilla al pasar el mouse
+      "text-codeshelf-muted hover:text-codeshelf-text hover:bg-white/5 border border-transparent":
+        !isActive,
+    },
+  ]}
+>
+  <IconComponent
+    size={18}
+    stroke-width={isActive ? 2.5 : 2}
+    class="group-hover:scale-110 transition-transform"
+  />
+  <span class="text-sm font-medium">{label}</span>
+</a>
