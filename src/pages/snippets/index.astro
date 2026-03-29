@@ -1,36 +1,48 @@
 ---
+// snippets/index.astro - Mejorado con TypeScript
 import CardSnippet from "../../components/CardSnippet.astro";
-import { LENGUAJES_FILTRO, SNIPPETS_DATA } from "../../data/snippets";
 import Layout from "../../layouts/Layout.astro";
 import { Plus, Search } from "@lucide/astro";
 import { db } from "../../lib/db";
+import { codeToHtml } from "shiki";
+import { LANGUAGES } from "../../types";
+import { getAllSnippets } from "../../service/snippet.service";
 
-const snippets = "hola";
-
-// db
-//   .prepare("SELECT * FROM snippets ORDER BY created_at DESC")
-//   .all();
+const snippets = getAllSnippets();
 ---
 
 <Layout title="Snippets">
   <main class="min-h-screen">
     <div class="w-full mx-auto flex">
+      <!-- Sidebar de lenguajes -->
       <div class="border-r-2 border-codeshelf-border w-75">
         <h2 class="text-2xl text-codeshelf-text py-4 px-6">Lenguajes</h2>
         <ul class="px-6 pb-5">
+          <li
+            class="px-2.5 py-1.5 cursor-pointer hover:bg-codeshelf-cyan/10 rounded-md transition-colors language-filter active"
+            data-lenguaje="all"
+          >
+            <span class="text-codeshelf-cyan font-bold">Todos</span>
+          </li>
           {
-            LENGUAJES_FILTRO.map((item) => (
-              <li class="px-2.5 py-1.5" data-lenguaje={item}>
-                <span class="text-codeshelf-muted font-bold">{item}</span>
+            LANGUAGES.map((lang) => (
+              <li
+                class="px-2.5 py-1.5 cursor-pointer hover:bg-codeshelf-cyan/10 rounded-md transition-colors language-filter"
+                data-lenguaje={lang.label.toLowerCase()}
+              >
+                <span class="text-codeshelf-muted font-bold">{lang.label}</span>
               </li>
             ))
           }
         </ul>
       </div>
+
+      <!-- Contenido principal -->
       <div class="w-full overflow-y-auto">
         <div
           class="flex justify-between items-center mb-8 border-b border-codeshelf-border py-3.5 px-5"
         >
+          <!-- Buscador -->
           <div class="relative w-full max-w-4xl">
             <div
               class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-codeshelf-muted"
@@ -44,9 +56,11 @@ const snippets = "hola";
               class="w-full bg-codeshelf-panel border border-codeshelf-border text-codeshelf-text text-sm rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-codeshelf-cyan/20 focus:border-codeshelf-cyan outline-none transition-all placeholder:text-codeshelf-muted placeholder:font-semibold"
             />
           </div>
+
+          <!-- Botón nuevo snippet -->
           <a
             href="/snippets/nuevo"
-            class="bg-codeshelf-cyan text-black px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
+            class="bg-codeshelf-cyan text-black px-4 py-2 rounded-lg transition-all hover:shadow-[0_0_15px_rgba(0,240,255,0.6)] hover:scale-105 flex items-center gap-1.5 whitespace-nowrap ml-4"
           >
             <Plus size={20} />
             <span>New Snippet</span>
@@ -69,8 +83,9 @@ const snippets = "hola";
                   Probá con otros términos 🔍
                 </span>
               </div>
+
               <ul class="my-4 px-4 flex flex-wrap justify-center gap-4">
-                {SNIPPETS_DATA.map((item) => (
+                {snippets.map((item) => (
                   <CardSnippet
                     id={item.id}
                     titulo={item.titulo}
@@ -89,26 +104,46 @@ const snippets = "hola";
 </Layout>
 
 <script>
-  const searchInput = document.querySelector("#snippet-search");
-  const cards = document.querySelectorAll(".snippet-card");
-  const noResultsMsg = document.querySelector("#no-results-msg");
+  // Tipado para elementos del DOM
+  const searchInput = document.querySelector(
+    "#snippet-search",
+  ) as HTMLInputElement | null;
+  const cards = document.querySelectorAll(
+    ".snippet-card",
+  ) as NodeListOf<HTMLElement>;
+  const noResultsMsg = document.querySelector(
+    "#no-results-msg",
+  ) as HTMLElement | null;
+  const languageFilters = document.querySelectorAll(
+    ".language-filter",
+  ) as NodeListOf<HTMLElement>;
 
-  searchInput?.addEventListener("input", (e) => {
-    const term = e.target.value.toLowerCase();
+  let currentLanguage = "all";
+
+  // Función para filtrar snippets
+  function filterSnippets() {
+    const searchTerm = searchInput?.value.toLowerCase() || "";
     let visibleCards = 0;
 
     cards.forEach((card) => {
-      const titulo = card.getAttribute("data-titulo") || "";
-      const lenguaje = card.getAttribute("data-lenguaje") || "";
-      const tags = card.getAttribute("data-tags") || "";
+      const titulo = (card.getAttribute("data-titulo") || "").toLowerCase();
+      const lenguaje = (card.getAttribute("data-lenguaje") || "").toLowerCase();
+      const tags = (card.getAttribute("data-tags") || "").toLowerCase();
 
-      const matches =
-        titulo.includes(term) || lenguaje.includes(term) || tags.includes(term);
+      const matchesSearch =
+        titulo.includes(searchTerm) ||
+        lenguaje.includes(searchTerm) ||
+        tags.includes(searchTerm);
 
-      if (matches) {
+      const matchesLanguage =
+        currentLanguage === "all" || lenguaje === currentLanguage;
+
+      const shouldShow = matchesSearch && matchesLanguage;
+
+      if (shouldShow) {
         card.classList.remove("hidden");
         card.classList.add("block");
-        visibleCards++; // Aumentamos el contador si hay coincidencia
+        visibleCards++;
       } else {
         card.classList.remove("block");
         card.classList.add("hidden");
@@ -121,5 +156,53 @@ const snippets = "hola";
     } else {
       noResultsMsg?.classList.add("hidden");
     }
+  }
+
+  // Event listener para búsqueda
+  searchInput?.addEventListener("input", filterSnippets);
+
+  // Event listeners para filtros de lenguaje
+  languageFilters.forEach((filter) => {
+    filter.addEventListener("click", () => {
+      const lenguaje = filter.getAttribute("data-lenguaje") || "all";
+      currentLanguage = lenguaje;
+
+      // Actualizar clases activas
+      languageFilters.forEach((f) => {
+        f.classList.remove("active");
+        const span = f.querySelector("span");
+        if (span) {
+          span.classList.remove("text-codeshelf-cyan");
+          span.classList.add("text-codeshelf-muted");
+        }
+      });
+
+      filter.classList.add("active");
+      const span = filter.querySelector("span");
+      if (span) {
+        span.classList.remove("text-codeshelf-muted");
+        span.classList.add("text-codeshelf-cyan");
+      }
+
+      filterSnippets();
+    });
   });
 </script>
+
+<style>
+  .language-filter {
+    position: relative;
+  }
+
+  .language-filter.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background-color: var(--codeshelf-cyan);
+    border-radius: 2px;
+  }
+</style>
