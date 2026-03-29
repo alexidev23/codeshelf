@@ -1,37 +1,47 @@
 ---
 import CardSnippet from "../components/CardSnippet.astro";
-import { SNIPPETS_DATA } from "../data/snippets";
 import Layout from "../layouts/Layout.astro";
 import { Plus } from "@lucide/astro";
+import { getRecentSnippets } from "../service/snippet.service";
+
+const snippets = getRecentSnippets(6);
 ---
 
 <Layout title="Inicio">
   <main class="min-h-screen w-full">
-    <div class="py-16 place-items-center space-y-4">
-      <h1 class="text-codeshelf-text text-5xl">Your Code, Organized</h1>
-      <p class="text-lg text-codeshelf-muted">
-        Store, manage, and generate documentation foy your snippets
+    <!-- Hero -->
+    <div class="py-16 place-items-center space-y-4 text-center">
+      <h1 class="text-codeshelf-text text-5xl font-bold">
+        Your Code, Organized
+      </h1>
+
+      <p class="text-lg text-codeshelf-muted max-w-xl">
+        Store, manage, and generate documentation for your snippets
       </p>
 
       <a
-        href={"/snippets/nuevo"}
+        href="/snippets/nuevo"
+        aria-label="Create new snippet"
         class="flex items-center gap-2.5 bg-codeshelf-cyan py-3.5 px-5 mt-6 rounded-md shadow-codeshelf-cyan shadow-[0_0_12px_rgba(0,240,255,0.8)] hover:scale-110 transition-all duration-300 cursor-pointer"
       >
         <Plus />
         <span>New Snippet</span>
       </a>
     </div>
-    <div class="max-w-6xl pb-10 mx-auto">
-      <h3 class="text-codeshelf-text text-2xl">Recently Used</h3>
-      <div class="my-4 grid grid-cols-3 grid-rows-2 gap-4">
+
+    <!-- Snippets -->
+    <div class="max-w-6xl pb-10 mx-auto px-4">
+      <h3 class="text-codeshelf-text text-2xl font-semibold">Recently Used</h3>
+
+      <div class="my-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {
-          SNIPPETS_DATA.map((item) => (
+          snippets.map((s) => (
             <CardSnippet
-              id={item.id}
-              titulo={item.titulo}
-              lenguaje={item.lenguaje}
-              codigo={item.codigo}
-              tags={item.tags}
+              id={s.id}
+              titulo={s.titulo}
+              lenguaje={s.lenguaje}
+              codigo={s.codigo}
+              tags={s.tags}
             />
           ))
         }
