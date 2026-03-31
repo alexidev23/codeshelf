@@ -1,15 +1,27 @@
 ---
 import { FileBraces } from "@lucide/astro";
-import { LANGUAGES, type Snippet } from "../types";
+import { LANGUAGES } from "../types";
 
 const { id, titulo, lenguaje, codigo, tags } = Astro.props;
+
+// ✅ Parsear tags si viene como string
+let tagsArray: string[] = [];
+if (Array.isArray(tags)) {
+  tagsArray = tags;
+} else if (typeof tags === "string") {
+  try {
+    tagsArray = JSON.parse(tags);
+  } catch {
+    tagsArray = [];
+  }
+}
 
 // color del lenguaje
 const color =
   LANGUAGES.find((lang) => lang.label === lenguaje)?.color || "#888888";
 
 // tags para búsqueda
-const tagsSearch = tags.join(" ");
+const tagsSearch = tagsArray.join(" ");
 ---
 
 <a
@@ -34,9 +46,9 @@ const tagsSearch = tags.join(" ");
   </pre>
 
   {
-    tags.length > 0 && (
+    tagsArray.length > 0 && (
       <div class="flex flex-wrap gap-2">
-        {tags.map((tag: string[]) => (
+        {tagsArray.map((tag: string) => (
           <span class="bg-codeshelf-purple/10 text-codeshelf-purple text-xs px-2 py-1.5 rounded-sm font-bold">
             {tag}
           </span>

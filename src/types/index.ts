@@ -46,3 +46,11 @@ export interface Snippet {
 export interface SnippetProcessed extends Snippet {
   htmlCodigo: string;
 }
+
+export interface CreateSnippetInput {
+  titulo: string;
+  descripcion: string;
+  lenguaje: string;
+  codigo: string;
+  tags: string[];
+}

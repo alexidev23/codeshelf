@@ -163,3 +163,38 @@
     line-height: 1.5;
   }
 }
+
+/* Forzamos a que el pre de Shiki no tenga fondo propio */
+pre.astro-code {
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Aseguramos que el texto mantenga buen contraste */
+pre.astro-code span {
+  font-family: inherit;
+}
+
+/* Scrollbar general */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Fondo del scrollbar */
+::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+
+/* Barra que se mueve */
+::-webkit-scrollbar-thumb {
+  background: #00f0ff;
+  border-radius: 8px;
+  border: 2px solid #0f0f0f;
+}
+
+/* Hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #00d9e6;
+}
