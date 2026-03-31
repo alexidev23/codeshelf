@@ -1,128 +1,319 @@
 ---
-// AIReadme.astro
-import CardSnippet from "../../components/CardSnippet.astro";
-import { SNIPPETS_DATA } from "../../data/snippets";
 import Layout from "../../layouts/Layout.astro";
----
+import { Sparkles, Copy, Check, FileText } from "@lucide/astro";
 
-<Layout title="Readme">
-  <div class="w-full mx-auto">
-    <div class="mb-8 space-y-2 border-b-2 border-codeshelf-border px-12 py-4">
-      <h2 class="text-3xl font-bold text-white tracking-tight">
-        <span class="text-codeshelf-cyan">AI</span> README Generator
-      </h2>
-      <p class="text-codeshelf-muted">
-        Describe your project to generate a comprehensive README
-      </p>
-    </div>
+let readme = "";
+let error: string | null = null;
+let formData = {
+  projectName: "",
+  description: "",
+  technologies: "",
+  repoUrl: "",
+};
 
-    <div
-      class="max-w-4xl bg-[#1A1A1D] border border-white/5 rounded-2xl p-6 mb-10 shadow-2xl mx-auto"
-    >
-      <label
-        class="block text-sm font-medium text-codeshelf-cyan mb-3 uppercase tracking-widest"
-      >
-        Prompt del Proyecto
-      </label>
+if (Astro.request.method === "POST") {
+  try {
+    const data = await Astro.request.formData();
 
-      <textarea
-        id="readme-prompt"
-        class="w-full h-64 bg-[#0D0D0F] border border-white/10 rounded-xl p-5 text-white focus:border-codeshelf-cyan outline-none resize-none transition-all placeholder:text-white/10"
-        placeholder="Ej: Un dashboard de gestión de inventario para una farmacia. Usamos Astro, Tailwind y SQLite. Necesito una sección de instalación, cómo configurar las variables de entorno y una tabla con las rutas de la API..."
-      ></textarea>
+    formData.projectName = data.get("projectName")?.toString().trim() || "";
+    formData.description = data.get("description")?.toString().trim() || "";
+    formData.technologies = data.get("technologies")?.toString().trim() || "";
+    formData.repoUrl = data.get("repoUrl")?.toString().trim() || "";
 
-      <div class="mt-6 flex items-center justify-between">
-        <div class="text-xs text-white/20 font-mono">
-          TIP: Sé específico con el stack tecnológico.
-        </div>
-        <button
-          id="generate-readme-btn"
-          class="bg-codeshelf-cyan text-black px-8 py-3 rounded-xl font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,240,255,0.3)] flex items-center gap-2"
-        >
-          Generar Documentación ✨
-        </button>
-      </div>
-    </div>
+    // Validaciones
+    if (!formData.projectName || formData.projectName.length < 3) {
+      error = "El nombre del proyecto debe tener al menos 3 caracteres";
+    } else if (!formData.description || formData.description.length < 10) {
+      error = "La descripción debe tener al menos 10 caracteres";
+    } else if (!formData.technologies) {
+      error = "Debes agregar al menos una tecnología";
+    } else {
+      // Llamar a OpenRouter
+      const technologiesArray = formData.technologies
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t !== "");
 
-    <div id="readme-result-container" class="hidden mt-10 space-y-4">
-      <div class="flex justify-between items-center">
-        <h3 class="text-white font-medium">README Generado</h3>
-        <button
-          id="copy-btn"
-          class="text-xs text-codeshelf-cyan hover:underline"
-          >Copiar Markdown</button
-        >
-      </div>
-      <div
-        class="bg-black/40 border border-white/10 rounded-xl p-6 relative group"
-      >
-        <pre
-          id="readme-output"
-          class="text-slate-300 text-sm font-mono whitespace-pre-wrap leading-relaxed">
-        </pre>
-      </div>
-    </div>
-  </div>
-</Layout>
+      const prompt = `Genera un README.md profesional y completo para el siguiente proyecto:
 
-<!-- <style>
-  .tab-btn {
-    @apply px-6 py-3 text-sm font-medium transition-all border-b-2 -mb-[2px];
-  }
-  .active-tab {
-    @apply border-codeshelf-cyan text-codeshelf-cyan bg-codeshelf-cyan/5;
-  }
-  .inactive-tab {
-    @apply border-transparent text-codeshelf-muted hover:text-codeshelf-text;
-  }
-</style> -->
+**Nombre del proyecto:** ${formData.projectName}
 
-<script>
-  const btn = document.getElementById("generate-readme-btn");
-  const output = document.getElementById("readme-output");
-  const container = document.getElementById("readme-result-container");
-  const promptInput = document.getElementById("readme-prompt");
+**Tecnologías utilizadas:** ${technologiesArray.join(", ")}
 
-  btn?.addEventListener("click", async () => {
-    const userPrompt = (promptInput as HTMLTextAreaElement).value;
-    if (!userPrompt) return alert("Escribí algo primero!");
+${formData.repoUrl ? `**Repositorio:** ${formData.repoUrl}` : ""}
 
-    btn.innerText = "Pensando...";
-    btn.style.opacity = "0.5";
+**Descripción:** ${formData.description}
 
-    try {
+Incluye las siguientes secciones:
+- Título con emoji relevante
+- Descripción breve y clara
+- Stack tecnológico con badges o emojis
+- Características principales (inferidas de la descripción)
+- Instalación paso a paso
+- Configuración (variables de entorno si aplica)
+- Uso básico con ejemplos
+${formData.repoUrl ? "- Enlace al repositorio" : ""}
+- Contribuciones (opcional)
+
+Usa formato Markdown apropiado con emojis relevantes. Sé profesional pero conciso.`;
+
       const response = await fetch(
         "https://openrouter.ai/api/v1/chat/completions",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer TU_API_KEY_ACA`, // ⚠️ Usá variables de entorno (.env)
             "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.OPENROUTER_API_KEY}`,
+            "HTTP-Referer": formData.repoUrl || "https://codeshelf.dev",
+            "X-Title": formData.projectName,
           },
           body: JSON.stringify({
-            model: "google/gemini-2.0-flash-lite-preview-02-05:free",
+            model: "openrouter/free", // Modelo gratuito
             messages: [
               {
                 role: "system",
                 content:
-                  "Sos un experto en documentación técnica. Generá un README.md profesional, con emojis, secciones claras (Instalación, Stack, Uso) y formato Markdown impecable basado en la descripción del usuario.",
+                  "Sos un experto en documentación técnica. Generá un README.md profesional, con emojis, secciones claras y formato Markdown impecable.",
               },
-              { role: "user", content: userPrompt },
+              {
+                role: "user",
+                content: prompt,
+              },
             ],
+            temperature: 0.7,
+            max_tokens: 2000,
           }),
         },
       );
 
-      const data = await response.json();
-      const markdown = data.choices[0].message.content;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `OpenRouter API error: ${response.status} - ${errorText}`,
+        );
+      }
 
-      container?.classList.remove("hidden");
-      output!.innerText = markdown;
-    } catch (error) {
-      alert("Hubo un error con la IA");
-    } finally {
-      btn.innerText = "Generar Documentación ✨";
-      btn.style.opacity = "1";
+      const result = await response.json();
+
+      if (!result.choices || result.choices.length === 0) {
+        throw new Error("No se recibió respuesta del modelo");
+      }
+
+      readme = result.choices[0].message.content;
     }
-  });
-</script>
+  } catch (err) {
+    console.error("Error generando README:", err);
+    error =
+      "Ocurrió un error al generar el README. Verifica tu API key de OpenRouter.";
+  }
+}
+---
+
+<Layout title="README Generator">
+  <main class="min-h-screen flex flex-col">
+    <!-- HEADER -->
+    <div class="border-b-2 border-codeshelf-border px-8 py-6">
+      <div class="flex items-center gap-3 mb-2">
+        <Sparkles class="text-codeshelf-cyan" size={32} />
+        <h2 class="text-3xl font-bold text-white tracking-tight">
+          <span class="text-codeshelf-cyan">AI</span> README Generator
+        </h2>
+      </div>
+      <p class="text-codeshelf-muted">
+        Describe tu proyecto y deja que la IA genere un README profesional
+      </p>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="flex-1 flex overflow-hidden">
+      <!-- FORMULARIO (IZQUIERDA) -->
+      <div
+        class="w-1/2 border-r-2 border-codeshelf-border px-8 py-6 overflow-y-auto"
+      >
+        <form method="POST" class="space-y-6">
+          <!-- ERROR -->
+          {
+            error && (
+              <div class="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )
+          }
+
+          <!-- NOMBRE DEL PROYECTO -->
+          <div class="flex flex-col">
+            <label class="mb-2 text-sm font-semibold text-codeshelf-text">
+              Nombre del Proyecto *
+            </label>
+            <input
+              type="text"
+              name="projectName"
+              required
+              minlength="3"
+              value={formData.projectName}
+              placeholder="CodeShelf"
+              class="bg-codeshelf-panel border border-codeshelf-border rounded-xl py-3 px-4 text-codeshelf-text focus:border-codeshelf-cyan focus:outline-none transition-colors"
+            />
+          </div>
+
+          <!-- TECNOLOGÍAS -->
+          <div class="flex flex-col">
+            <label class="mb-2 text-sm font-semibold text-codeshelf-text">
+              Tecnologías / Stack *
+            </label>
+            <input
+              type="text"
+              name="technologies"
+              required
+              value={formData.technologies}
+              placeholder="Astro 4, Bun, better-sqlite3, TailwindCSS, OpenRouter"
+              class="bg-codeshelf-panel border border-codeshelf-border rounded-xl py-3 px-4 text-codeshelf-text focus:border-codeshelf-cyan focus:outline-none transition-colors"
+            />
+            <p class="mt-1 text-xs text-codeshelf-muted">
+              Separadas por comas
+            </p>
+          </div>
+
+          <!-- URL DEL REPO -->
+          <div class="flex flex-col">
+            <label class="mb-2 text-sm font-semibold text-codeshelf-text">
+              URL del Repositorio
+              <span class="text-codeshelf-muted font-normal">(opcional)</span>
+            </label>
+            <input
+              type="url"
+              name="repoUrl"
+              value={formData.repoUrl}
+              placeholder="https://github.com/usuario/proyecto"
+              class="bg-codeshelf-panel border border-codeshelf-border rounded-xl py-3 px-4 text-codeshelf-text focus:border-codeshelf-cyan focus:outline-none transition-colors"
+            />
+          </div>
+
+          <!-- DESCRIPCIÓN -->
+          <div class="flex flex-col">
+            <label class="mb-2 text-sm font-semibold text-codeshelf-text">
+              Descripción del Proyecto *
+            </label>
+            <textarea
+              name="description"
+              required
+              minlength="10"
+              rows="8"
+              placeholder="Aplicación web para gestionar snippets de código con búsqueda por lenguaje, tags y generación automática de README con IA..."
+              class="bg-codeshelf-panel border border-codeshelf-border rounded-xl py-3 px-4 text-codeshelf-text focus:border-codeshelf-cyan focus:outline-none transition-colors resize-none"
+            >{formData.description}</textarea>
+            <p class="mt-1 text-xs text-codeshelf-muted">
+              Cuanto más detallada, mejor será el README generado
+            </p>
+          </div>
+
+          <!-- BOTÓN GENERAR -->
+          <button
+            type="submit"
+            class="w-full bg-codeshelf-cyan text-black py-3 px-6 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all flex items-center justify-center gap-2 active:scale-95"
+          >
+            <Sparkles size={20} />
+            Generar README con IA
+          </button>
+
+          <div class="text-xs text-codeshelf-muted">
+            <span class="font-semibold">Tip:</span> Sé específico con las características
+            y funcionalidades de tu proyecto para obtener mejores resultados.
+          </div>
+        </form>
+      </div>
+
+      <!-- PREVIEW (DERECHA) -->
+      <div class="w-1/2 flex flex-col bg-codeshelf-bg">
+        <!-- HEADER DEL PREVIEW -->
+        <div
+          class="border-b border-codeshelf-border px-8 py-4 flex justify-between items-center"
+        >
+          <div class="flex items-center gap-2">
+            <FileText size={20} class="text-codeshelf-cyan" />
+            <h3 class="text-lg font-semibold text-codeshelf-text">
+              README Preview
+            </h3>
+          </div>
+
+          {
+            readme && (
+              <button
+                id="copy-btn"
+                data-readme={readme}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-codeshelf-cyan text-codeshelf-cyan text-sm font-semibold hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all active:scale-95"
+              >
+                <Copy size={16} />
+                <span id="copy-text">Copy Markdown</span>
+              </button>
+            )
+          }
+        </div>
+
+        <!-- CONTENIDO DEL PREVIEW -->
+        <div class="flex-1 overflow-y-auto px-8 py-6">
+          {
+            readme ? (
+              <div class="prose prose-invert max-w-none">
+                <div class="bg-codeshelf-panel border border-codeshelf-border rounded-xl p-6">
+                  <pre class="text-sm text-codeshelf-text whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
+                    {readme}
+                  </pre>
+                </div>
+              </div>
+            ) : (
+              <div class="flex items-center justify-center h-full">
+                <div class="text-center space-y-4">
+                  <FileText
+                    size={64}
+                    class="text-codeshelf-muted/30 mx-auto"
+                  />
+                  <p class="text-codeshelf-muted text-lg">
+                    Completa el formulario y genera tu README
+                  </p>
+                  <p class="text-codeshelf-muted/70 text-sm">
+                    El resultado aparecerá aquí
+                  </p>
+                </div>
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+{
+  readme && (
+    <script>
+      const copyBtn = document.getElementById("copy-btn");
+      const copyText = document.getElementById("copy-text");
+
+      copyBtn?.addEventListener("click", async () => {
+        const readme = copyBtn.getAttribute("data-readme");
+
+        if (!readme) return;
+
+        try {
+          await navigator.clipboard.writeText(readme);
+
+          if (copyText) {
+            copyText.textContent = "Copied!";
+            copyBtn?.classList.add("bg-codeshelf-cyan/10");
+          }
+
+          setTimeout(() => {
+            if (copyText) {
+              copyText.textContent = "Copy Markdown";
+              copyBtn?.classList.remove("bg-codeshelf-cyan/10");
+            }
+          }, 2000);
+        } catch (err) {
+          console.error("Error al copiar:", err);
+          if (copyText) copyText.textContent = "Error";
+        }
+      });
+    </script>
+  )
+}
